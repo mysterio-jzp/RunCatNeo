@@ -99,6 +99,23 @@ public struct UserDefaultsRepository: Sendable {
         }
     }
 
+    public var projectsConfiguration: ProjectConfiguration {
+        get {
+            guard let data = userDefaultsClient.data(.projectsConfiguration),
+                  let value = try? JSONDecoder().decode(ProjectConfiguration.self, from: data) else {
+                return .empty
+            }
+            return value
+        }
+        nonmutating set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                userDefaultsClient.set(data, .projectsConfiguration)
+            } else {
+                userDefaultsClient.removeObject(.projectsConfiguration)
+            }
+        }
+    }
+
     public init(_ userDefaultsClient: UserDefaultsClient) {
         self.userDefaultsClient = userDefaultsClient
         if ProcessInfo.needsResetUserDefaults {

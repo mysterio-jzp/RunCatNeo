@@ -249,4 +249,22 @@ struct DashboardTests {
         await sut.send(.debugWakeUpButtonTapped)
         #expect(postedNames.withLock(\.self) == [NSWorkspace.didWakeNotification])
     }
+
+    @MainActor @Test
+    func send_tabSelected_updates_selected_tab() async {
+        let sut = Dashboard(.testDependencies())
+        #expect(sut.selectedTab == .system)
+        await sut.send(.tabSelected(.projects))
+        #expect(sut.selectedTab == .projects)
+        await sut.send(.tabSelected(.system))
+        #expect(sut.selectedTab == .system)
+    }
+
+    @MainActor @Test
+    func send_projects_errorOccurred_forwards_error_and_shows_alert() async {
+        let sut = Dashboard(.testDependencies())
+        await sut.send(.projects(.errorOccurred(.project(.folderUnreadable))))
+        #expect(sut.error == .project(.folderUnreadable))
+        #expect(sut.showingAlert)
+    }
 }

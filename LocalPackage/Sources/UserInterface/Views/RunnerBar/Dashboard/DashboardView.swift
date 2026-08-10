@@ -18,6 +18,7 @@
  limitations under the License.
  */
 
+import DataSource
 import Model
 import SwiftUI
 
@@ -34,21 +35,45 @@ struct DashboardView: View {
                 Spacer()
                 MenuView(store: store)
             }
-            SystemInfoStackView(
-                systemInfoBundle: store.systemInfoBundle,
-                cpuRingBuffer: store.cpuRingBuffer,
-                memoryRingBuffer: store.memoryRingBuffer,
-                isPreview: store.isPreview
-            )
-            ForEach(store.customMetricsBundles) { customMetricsBundle in
-                CustomMetricsCardView(
-                    customMetricsBundle: customMetricsBundle,
-                    displayedDate: store.displayedDate
+            Picker(selection: Binding<DashboardTab>(
+                get: { store.selectedTab },
+                asyncSet: { await store.send(.tabSelected($0)) }
+            )) {
+                ForEach(DashboardTab.allCases, id: \.self) { tab in
+                    Text(tab.localizedName)
+                        .tag(tab)
+                }
+            } label: {
+                EmptyView()
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            switch store.selectedTab {
+            case .system:
+                SystemInfoStackView(
+                    systemInfoBundle: store.systemInfoBundle,
+                    cpuRingBuffer: store.cpuRingBuffer,
+                    memoryRingBuffer: store.memoryRingBuffer,
+                    isPreview: store.isPreview
                 )
+                ForEach(store.customMetricsBundles) { customMetricsBundle in
+                    CustomMetricsCardView(
+                        customMetricsBundle: customMetricsBundle,
+                        displayedDate: store.displayedDate
+                    )
+                }
+            case .projects:
+                ProjectsDashboardView(store: store.projects)
             }
         }
         .fixedSize()
         .padding(8)
+        .alert(
+            isPresented: $store.showingAlert,
+            error: store.error,
+            actions: { _ in },
+            message: { _ in }
+        )
         .task {
             await store.send(.viewAppeared(String(describing: Self.self)))
         }

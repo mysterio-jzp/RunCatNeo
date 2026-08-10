@@ -43,7 +43,11 @@ public final class Dashboard: Composable {
     public var displayedDate: Date
     public var currentRunner: Runner?
     public var runnerBundleList: [RunnerBundle]
+    public var selectedTab: DashboardTab
+    public var showingAlert: Bool
+    public var error: RCNError?
     public let isPreview: Bool
+    public let projects: ProjectsDashboard
     public let action: (Action) async -> Void
 
     public init(
@@ -56,6 +60,10 @@ public final class Dashboard: Composable {
         displayedDate: Date? = nil,
         currentRunner: Runner? = nil,
         runnerBundleList: [RunnerBundle] = [],
+        selectedTab: DashboardTab = .system,
+        showingAlert: Bool = false,
+        error: RCNError? = nil,
+        projects: ProjectsDashboard? = nil,
         isPreview: Bool? = nil,
         action: @escaping (Action) async -> Void =  { _ in }
     ) {
@@ -74,8 +82,15 @@ public final class Dashboard: Composable {
         self.displayedDate = displayedDate ?? dateClient.now()
         self.currentRunner = currentRunner
         self.runnerBundleList = runnerBundleList
+        self.selectedTab = selectedTab
+        self.showingAlert = showingAlert
+        self.error = error
         self.isPreview = isPreview ?? ProcessInfo.isPreview
+        weak var weakSelf: Dashboard? = nil
+        self.projects = projects ??
+            .init(appDependencies, action: { await weakSelf?.send(.projects($0)) })
         self.action = action
+        weakSelf = self
     }
 
     public func reduce(_ action: Action) async {
@@ -155,6 +170,16 @@ public final class Dashboard: Composable {
 
         case .debugWakeUpButtonTapped:
             nsWorkspaceClient.post(NSWorkspace.didWakeNotification, nil)
+
+        case let .tabSelected(tab):
+            selectedTab = tab
+
+        case let .projects(.errorOccurred(error)):
+            self.error = error
+            showingAlert = true
+
+        case .projects:
+            return
         }
     }
 
@@ -185,5 +210,7 @@ public final class Dashboard: Composable {
         case quitButtonTapped
         case debugSleepButtonTapped
         case debugWakeUpButtonTapped
+        case tabSelected(DashboardTab)
+        case projects(ProjectsDashboard.Action)
     }
 }

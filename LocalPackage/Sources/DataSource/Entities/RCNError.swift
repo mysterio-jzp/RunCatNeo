@@ -21,6 +21,7 @@
 public enum RCNError: Error, Equatable {
     case customRunner(CustomRunner)
     case customMetrics(CustomMetrics)
+    case project(Project)
 
     public enum CustomRunner: Error {
         case runnerInUse
@@ -34,5 +35,10 @@ public enum RCNError: Error, Equatable {
     public enum CustomMetrics: Error {
         case fileUnreadable
         case invalidFormat
+    }
+
+    public enum Project: Error, Equatable {
+        case folderUnreadable
+        case duplicateFolder
     }
 }

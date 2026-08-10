@@ -25,7 +25,10 @@ public struct NSWorkspaceClient: DependencyClient {
     public var open: @Sendable (URL) -> Bool
     public var urlForApplication: @Sendable (String) -> URL?
     public var openApplication: @Sendable (URL, NSWorkspace.OpenConfiguration) -> Void
+    public var openWithApplication: @Sendable ([URL], URL) async throws -> Void
+    public var urlsForApplicationsOpening: @Sendable (URL) -> [URL]
     public var activateFileViewerSelecting: @Sendable ([URL]) -> Void
+    public var applicationIcon: @MainActor @Sendable (URL) -> NSImage?
     public var post: @Sendable (Notification.Name, Any?) -> Void
     public var publisher: @Sendable (Notification.Name) -> AnyPublisher<Notification, Never>
 
@@ -33,7 +36,12 @@ public struct NSWorkspaceClient: DependencyClient {
         open: { NSWorkspace.shared.open($0) },
         urlForApplication: { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) },
         openApplication: { NSWorkspace.shared.openApplication(at: $0, configuration: $1) },
+        openWithApplication: {
+            _ = try await NSWorkspace.shared.open($0, withApplicationAt: $1, configuration: .init())
+        },
+        urlsForApplicationsOpening: { NSWorkspace.shared.urlsForApplications(toOpen: $0) },
         activateFileViewerSelecting: { NSWorkspace.shared.activateFileViewerSelecting($0) },
+        applicationIcon: { NSWorkspace.shared.icon(forFile: $0.path) },
         post: { NSWorkspace.shared.notificationCenter.post(name: $0, object: $1) },
         publisher: { NSWorkspace.shared.notificationCenter.publisher(for: $0).eraseToAnyPublisher() }
     )
@@ -42,7 +50,10 @@ public struct NSWorkspaceClient: DependencyClient {
         open: { _ in false },
         urlForApplication: { _ in nil },
         openApplication: { _, _ in },
+        openWithApplication: { _, _ in },
+        urlsForApplicationsOpening: { _ in [] },
         activateFileViewerSelecting: { _ in },
+        applicationIcon: { _ in nil },
         post: { _, _ in },
         publisher: { _ in Empty<Notification, Never>().eraseToAnyPublisher() }
     )

@@ -53,12 +53,26 @@ extension RCNError.CustomMetrics: LocalizedError {
     }
 }
 
+extension RCNError.Project: LocalizedError {
+    public var errorDescription: String? {
+        let localizationValue: String.LocalizationValue = switch self {
+        case .folderUnreadable:
+            "folderUnreadable"
+        case .duplicateFolder:
+            "duplicateFolder"
+        }
+        return String(localized: localizationValue, bundle: .module)
+    }
+}
+
 extension RCNError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case let .customRunner(detail):
             detail.errorDescription
         case let .customMetrics(detail):
+            detail.errorDescription
+        case let .project(detail):
             detail.errorDescription
         }
     }

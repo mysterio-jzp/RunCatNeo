@@ -21,11 +21,19 @@ extension UserDefaultsClient {
             }
             return try? JSONDecoder().decode(MetricsBarConfiguration.self, from: data)
         }
+
+        func currentProjectsConfiguration() -> ProjectConfiguration? {
+            guard let data = lock.withLock({ $0[.projectsConfiguration] }) else {
+                return nil
+            }
+            return try? JSONDecoder().decode(ProjectConfiguration.self, from: data)
+        }
     }
 
     static func storage(
         initialSources: [CustomMetricsSource] = [],
-        initialMetricsBarConfiguration: MetricsBarConfiguration? = nil
+        initialMetricsBarConfiguration: MetricsBarConfiguration? = nil,
+        initialProjects: [Project] = []
     ) -> Storage {
         var initial = [String: Data]()
         if !initialSources.isEmpty,
@@ -35,6 +43,10 @@ extension UserDefaultsClient {
         if let initialMetricsBarConfiguration,
            let encoded = try? JSONEncoder().encode(initialMetricsBarConfiguration) {
             initial[.metricsBarConfiguration] = encoded
+        }
+        if !initialProjects.isEmpty,
+           let encoded = try? JSONEncoder().encode(ProjectConfiguration(projects: initialProjects)) {
+            initial[.projectsConfiguration] = encoded
         }
         let lock = AllocatedUnfairLock<[String: Data]>(initialState: initial)
         let client = testDependency(of: UserDefaultsClient.self) {
