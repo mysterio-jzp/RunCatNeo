@@ -34,19 +34,19 @@ struct SystemInfoView<Accessory: View>: View {
                 .frame(width: 24, height: 24)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: systemInfo.summary)
-                Group {
-                    if isVisibleDetails {
-                        ForEach(systemInfo.details.indices, id: \.self) { index in
-                            Text(verbatim: systemInfo.details[index])
-                                .font(.caption)
-                        }
+                if isVisibleDetails {
+                    ForEach(systemInfo.details.indices, id: \.self) { index in
+                        Text(verbatim: systemInfo.details[index])
+                            .font(.caption)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
-                    accessory()
                 }
-                .padding(.leading, 12)
             }
+            Spacer(minLength: 0)
+            accessory()
         }
-        .fixedSize()
-        .padding(.leading, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
     }
 }

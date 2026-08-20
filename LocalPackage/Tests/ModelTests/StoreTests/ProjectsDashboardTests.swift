@@ -192,6 +192,7 @@ struct ProjectsDashboardTests {
         await sut.send(.removingProjectConfirmed)
         #expect(sut.projects.isEmpty)
         #expect(sut.pendingRemovalProjectID == nil)
+        #expect(!sut.showingConfirmationDialog)
         #expect(storage.currentProjectsConfiguration()?.projects.isEmpty == true)
     }
 
@@ -204,6 +205,7 @@ struct ProjectsDashboardTests {
         await sut.send(.viewAppeared)
         await sut.send(.removingProjectConfirmed)
         #expect(sut.projects.count == 1)
+        #expect(!sut.showingConfirmationDialog)
     }
 
     @MainActor @Test
@@ -218,6 +220,7 @@ struct ProjectsDashboardTests {
         await sut.send(.removingProjectCancelled)
         #expect(sut.pendingRemovalProjectID == nil)
         #expect(sut.projects.count == 1)
+        #expect(!sut.showingConfirmationDialog)
     }
 
     @MainActor @Test

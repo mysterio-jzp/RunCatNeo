@@ -34,9 +34,12 @@ struct ProjectRowView: View {
     var project: Project
     var currentIcon: NSImage?
     var openWithOptions: [OpenWithOption]
+    var isConfirmingRemoval: Bool
     var openProject: () async -> Void
     var openWithPicked: (String?) async -> Void
     var removeButtonTapped: () async -> Void
+    var removeConfirmed: () async -> Void
+    var removeCancelled: () async -> Void
 
     var body: some View {
         HStack(spacing: 8) {
@@ -108,9 +111,42 @@ struct ProjectRowView: View {
             }
             .buttonStyle(.borderless)
             .tint(Color.red)
+            .opacity(isConfirmingRemoval ? 0 : 1)
+            .disabled(isConfirmingRemoval)
         }
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .materialCellStyle()
+        .background(
+            isConfirmingRemoval ? Color.red.opacity(0.10) : Color.clear,
+            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+        )
+        .overlay(alignment: .trailing) {
+            if isConfirmingRemoval {
+                HStack(spacing: 4) {
+                    Button(role: .destructive) {
+                        Task {
+                            await removeConfirmed()
+                        }
+                    } label: {
+                        Text("remove", bundle: .module)
+                    }
+                    Button {
+                        Task {
+                            await removeCancelled()
+                        }
+                    } label: {
+                        Text("cancel", bundle: .module)
+                    }
+                }
+                .buttonStyle(.borderless)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                .padding(.trailing, 8)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.82), value: isConfirmingRemoval)
     }
 }

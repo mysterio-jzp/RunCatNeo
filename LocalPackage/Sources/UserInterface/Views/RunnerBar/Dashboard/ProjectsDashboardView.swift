@@ -71,6 +71,11 @@ struct ProjectsDashboardView: View {
             ?? appURL.deletingPathExtension().lastPathComponent
     }
 
+    private var pendingRemovalProject: Project? {
+        guard let id = store.pendingRemovalProjectID else { return nil }
+        return store.projects.first { $0.id == id }
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             if store.projects.isEmpty {
@@ -83,21 +88,28 @@ struct ProjectsDashboardView: View {
                 ScrollView {
                     LazyVStack(spacing: 8) {
                         ForEach(store.projects) { project in
-                                ProjectRowView(
-                                    project: project,
-                                    currentIcon: currentIcon(for: project),
-                                    openWithOptions: openWithOptions(for: project),
-                                    openProject: {
-                                        await store.send(.openProjectButtonTapped(project))
-                                    },
-                                    openWithPicked: { bundleIdentifier in
-                                        await store.send(.openWithAppPicked(project, bundleIdentifier))
-                                    },
-                                    removeButtonTapped: {
-                                        await store.send(.removeProjectButtonTapped(project.id))
-                                    }
-                                )
-                            }
+                            ProjectRowView(
+                                project: project,
+                                currentIcon: currentIcon(for: project),
+                                openWithOptions: openWithOptions(for: project),
+                                isConfirmingRemoval: pendingRemovalProject?.id == project.id,
+                                openProject: {
+                                    await store.send(.openProjectButtonTapped(project))
+                                },
+                                openWithPicked: { bundleIdentifier in
+                                    await store.send(.openWithAppPicked(project, bundleIdentifier))
+                                },
+                                removeButtonTapped: {
+                                    await store.send(.removeProjectButtonTapped(project.id))
+                                },
+                                removeConfirmed: {
+                                    await store.send(.removingProjectConfirmed)
+                                },
+                                removeCancelled: {
+                                    await store.send(.removingProjectCancelled)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -120,29 +132,6 @@ struct ProjectsDashboardView: View {
                 }
             }
         }
-        .confirmationDialog(
-            Text("removeProject", bundle: .module),
-            isPresented: $store.showingConfirmationDialog,
-            actions: {
-                Button(role: .destructive) {
-                    Task {
-                        await store.send(.removingProjectConfirmed)
-                    }
-                } label: {
-                    Text("remove", bundle: .module)
-                }
-                Button(role: .cancel) {
-                    Task {
-                        await store.send(.removingProjectCancelled)
-                    }
-                } label: {
-                    Text("cancel", bundle: .module)
-                }
-            },
-            message: {
-                Text("removeProjectMessage", bundle: .module)
-            }
-        )
         .task {
             await store.send(.viewAppeared)
         }

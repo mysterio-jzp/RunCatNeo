@@ -25,6 +25,7 @@ import SwiftUI
 struct DashboardView: View {
     @Environment(\.appDependencies) private var appDependencies
     @StateObject var store: Dashboard
+    @State private var moveInFromTrailing = true
 
     var body: some View {
         VStack(spacing: 8) {
@@ -35,39 +36,71 @@ struct DashboardView: View {
                 Spacer()
                 MenuView(store: store)
             }
-            Picker(selection: Binding<DashboardTab>(
-                get: { store.selectedTab },
-                asyncSet: { await store.send(.tabSelected($0)) }
-            )) {
+            HStack(spacing: 2) {
                 ForEach(DashboardTab.allCases, id: \.self) { tab in
-                    Text(tab.localizedName)
-                        .tag(tab)
+                    Button {
+                        Task {
+                            await store.send(.tabSelected(tab))
+                        }
+                    } label: {
+                        Text(tab.localizedName)
+                            .font(.system(size: 12, weight: store.selectedTab == tab ? .semibold : .regular))
+                            .foregroundStyle(store.selectedTab == tab ? Color.primary : Color.secondary)
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 22)
+                            .padding(.vertical, 2)
+                            .padding(.horizontal, 10)
+                            .contentShape(Rectangle())
+                            .background {
+                                if store.selectedTab == tab {
+                                    Capsule()
+                                        .fill(.regularMaterial)
+                                }
+                            }
+                    }
+                    .buttonStyle(.plain)
                 }
-            } label: {
-                EmptyView()
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            switch store.selectedTab {
-            case .system:
-                SystemInfoStackView(
-                    systemInfoBundle: store.systemInfoBundle,
-                    cpuRingBuffer: store.cpuRingBuffer,
-                    memoryRingBuffer: store.memoryRingBuffer,
-                    isPreview: store.isPreview
-                )
-                ForEach(store.customMetricsBundles) { customMetricsBundle in
-                    CustomMetricsCardView(
-                        customMetricsBundle: customMetricsBundle,
-                        displayedDate: store.displayedDate
-                    )
+            .frame(maxWidth: .infinity)
+            .padding(3)
+            .background {
+                Capsule()
+                    .fill(Color.primary.opacity(0.05))
+                    .overlay {
+                        Capsule()
+                            .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1)
+                    }
+            }
+            Group {
+                switch store.selectedTab {
+                case .system:
+                    VStack(spacing: 8) {
+                        SystemInfoStackView(
+                            systemInfoBundle: store.systemInfoBundle,
+                            cpuRingBuffer: store.cpuRingBuffer,
+                            memoryRingBuffer: store.memoryRingBuffer,
+                            isPreview: store.isPreview
+                        )
+                        ForEach(store.customMetricsBundles) { customMetricsBundle in
+                            CustomMetricsCardView(
+                                customMetricsBundle: customMetricsBundle,
+                                displayedDate: store.displayedDate
+                            )
+                        }
+                    }
+                case .projects:
+                    ProjectsDashboardView(store: store.projects)
                 }
-            case .projects:
-                ProjectsDashboardView(store: store.projects)
             }
+            .transition(.asymmetric(
+                insertion: .move(edge: moveInFromTrailing ? .trailing : .leading).combined(with: .opacity),
+                removal: .move(edge: moveInFromTrailing ? .leading : .trailing).combined(with: .opacity)
+            ))
         }
-        .fixedSize()
         .padding(8)
+        .frame(width: 400)
+        .fixedSize(horizontal: false, vertical: true)
+        .animation(.easeInOut(duration: 0.3), value: store.selectedTab)
         .alert(
             isPresented: $store.showingAlert,
             error: store.error,
@@ -76,6 +109,13 @@ struct DashboardView: View {
         )
         .task {
             await store.send(.viewAppeared(String(describing: Self.self)))
+        }
+        .onChange(of: store.selectedTab) { oldValue, newValue in
+            let tabs = DashboardTab.allCases
+            if let oldIndex = tabs.firstIndex(of: oldValue),
+               let newIndex = tabs.firstIndex(of: newValue) {
+                moveInFromTrailing = newIndex > oldIndex
+            }
         }
         .onDisappear {
             Task {

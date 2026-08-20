@@ -82,13 +82,16 @@ public final class ProjectsDashboard: Composable {
             showingConfirmationDialog = true
 
         case .removingProjectConfirmed:
-            guard let projectID = pendingRemovalProjectID else { return }
-            removeProject(of: projectID)
-            projects = userDefaultsRepository.projectsConfiguration.projects
+            if let projectID = pendingRemovalProjectID {
+                removeProject(of: projectID)
+                projects = userDefaultsRepository.projectsConfiguration.projects
+            }
             pendingRemovalProjectID = nil
+            showingConfirmationDialog = false
 
         case .removingProjectCancelled:
             pendingRemovalProjectID = nil
+            showingConfirmationDialog = false
 
         case let .openProjectButtonTapped(project):
             do {
