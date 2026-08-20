@@ -25,6 +25,7 @@ import SwiftUI
 
 struct ProjectsDashboardView: View {
     @State var store: ProjectsDashboard
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.appDependencies) private var appDependencies
 
     private func currentIcon(for project: Project) -> NSImage? {
@@ -94,10 +95,12 @@ struct ProjectsDashboardView: View {
                                 openWithOptions: openWithOptions(for: project),
                                 isConfirmingRemoval: pendingRemovalProject?.id == project.id,
                                 openProject: {
-                                    await store.send(.openProjectButtonTapped(project))
+                                    Task { await store.send(.openProjectButtonTapped(project)) }
+                                    dismiss()
                                 },
                                 openWithPicked: { bundleIdentifier in
-                                    await store.send(.openWithAppPicked(project, bundleIdentifier))
+                                    Task { await store.send(.openWithAppPicked(project, bundleIdentifier)) }
+                                    dismiss()
                                 },
                                 removeButtonTapped: {
                                     await store.send(.removeProjectButtonTapped(project.id))
