@@ -22,4 +22,18 @@ import AppKit
 
 extension NSImage {
     static let appIcon = NSImage(named: NSImage.applicationIconName)!
+
+    func resized(to targetSize: NSSize) -> NSImage {
+        let image = NSImage(size: targetSize)
+        image.lockFocus()
+        draw(
+            in: NSRect(origin: .zero, size: targetSize),
+            from: NSRect(origin: .zero, size: size),
+            operation: .sourceOver,
+            fraction: 1.0
+        )
+        image.unlockFocus()
+        image.isTemplate = isTemplate
+        return image
+    }
 }

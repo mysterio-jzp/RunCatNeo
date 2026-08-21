@@ -77,21 +77,19 @@ struct ProjectRowView: View {
                             Text(option.name)
                         } icon: {
                             if let image = option.icon {
-                                Image(nsImage: image)
-                                    .resizable()
-                                    .frame(width: 16, height: 16)
+                                Image(nsImage: image.resized(to: NSSize(width: 16, height: 16)))
+                                    .renderingMode(.original)
                             } else {
                                 Image(systemName: "app.dashed")
                             }
                         }
+                        .labelStyle(.titleAndIcon)
                     }
                 }
             } label: {
                 HStack(spacing: 4) {
                     if let image = currentIcon {
-                        Image(nsImage: image)
-                            .resizable()
-                            .frame(width: 16, height: 16)
+                        Image(nsImage: image.resized(to: NSSize(width: 16, height: 16)))
                     } else {
                         Image(systemName: "app.dashed")
                     }

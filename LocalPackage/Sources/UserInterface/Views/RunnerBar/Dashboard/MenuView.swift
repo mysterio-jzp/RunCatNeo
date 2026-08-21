@@ -165,6 +165,8 @@ struct MenuView: View {
                 Image(systemName: "list.bullet")
             }
             .labelStyle(.iconOnly)
+            .padding(4)
+            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 8))
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)

@@ -37,6 +37,11 @@ struct SettingsView: View {
                     }
                 }
                 .tag(SettingsTab.general)
+            TranslationSettingsView()
+                .tabItem {
+                    Label("翻译", systemImage: "character.bubble")
+                }
+                .tag(SettingsTab.translation)
             RunnerSettingsView(store: .init(appDependencies))
                 .tabItem {
                     Label {

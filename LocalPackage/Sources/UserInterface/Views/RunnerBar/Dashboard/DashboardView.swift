@@ -26,6 +26,31 @@ struct DashboardView: View {
     @Environment(\.appDependencies) private var appDependencies
     @StateObject var store: Dashboard
     @State private var moveInFromTrailing = true
+    @Namespace private var tabNamespace
+
+    private let tabTransitionAnimation = Animation.spring(
+        response: 0.42,
+        dampingFraction: 0.72,
+        blendDuration: 0.15
+    )
+
+    private func tabBackground(_ isSelected: Bool) -> some View {
+        Group {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular.interactive(), in: .capsule)
+                    .matchedGeometryEffect(id: "selected-tab", in: tabNamespace)
+                    .keyframeAnimator(initialValue: 1.0, trigger: store.selectedTab) { content, scale in
+                        content.scaleEffect(x: scale, y: 1)
+                    } keyframes: { _ in
+                        KeyframeTrack {
+                            CubicKeyframe(0.75, duration: 0.14)
+                            SpringKeyframe(1.0, duration: 0.28)
+                        }
+                    }
+            }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -51,12 +76,7 @@ struct DashboardView: View {
                             .padding(.vertical, 2)
                             .padding(.horizontal, 10)
                             .contentShape(Rectangle())
-                            .background {
-                                if store.selectedTab == tab {
-                                    Capsule()
-                                        .fill(.regularMaterial)
-                                }
-                            }
+                            .background(tabBackground(store.selectedTab == tab))
                     }
                     .buttonStyle(.plain)
                 }
@@ -65,27 +85,29 @@ struct DashboardView: View {
             .padding(3)
             .background {
                 Capsule()
-                    .fill(Color.primary.opacity(0.05))
+                    .fill(.ultraThinMaterial)
                     .overlay {
                         Capsule()
-                            .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1)
+                            .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
                     }
             }
             Group {
                 switch store.selectedTab {
                 case .system:
-                    VStack(spacing: 8) {
-                        SystemInfoStackView(
-                            systemInfoBundle: store.systemInfoBundle,
-                            cpuRingBuffer: store.cpuRingBuffer,
-                            memoryRingBuffer: store.memoryRingBuffer,
-                            isPreview: store.isPreview
-                        )
-                        ForEach(store.customMetricsBundles) { customMetricsBundle in
-                            CustomMetricsCardView(
-                                customMetricsBundle: customMetricsBundle,
-                                displayedDate: store.displayedDate
+                    GlassEffectContainer(spacing: 8) {
+                        VStack(spacing: 8) {
+                            SystemInfoStackView(
+                                systemInfoBundle: store.systemInfoBundle,
+                                cpuRingBuffer: store.cpuRingBuffer,
+                                memoryRingBuffer: store.memoryRingBuffer,
+                                isPreview: store.isPreview
                             )
+                            ForEach(store.customMetricsBundles) { customMetricsBundle in
+                                CustomMetricsCardView(
+                                    customMetricsBundle: customMetricsBundle,
+                                    displayedDate: store.displayedDate
+                                )
+                            }
                         }
                     }
                 case .projects:
@@ -100,7 +122,7 @@ struct DashboardView: View {
         .padding(8)
         .frame(width: 400)
         .fixedSize(horizontal: false, vertical: true)
-        .animation(.easeInOut(duration: 0.3), value: store.selectedTab)
+        .animation(tabTransitionAnimation, value: store.selectedTab)
         .alert(
             isPresented: $store.showingAlert,
             error: store.error,

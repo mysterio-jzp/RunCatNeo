@@ -87,31 +87,33 @@ struct ProjectsDashboardView: View {
                     .materialCellStyle()
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 8) {
-                        ForEach(store.projects) { project in
-                            ProjectRowView(
-                                project: project,
-                                currentIcon: currentIcon(for: project),
-                                openWithOptions: openWithOptions(for: project),
-                                isConfirmingRemoval: pendingRemovalProject?.id == project.id,
-                                openProject: {
-                                    Task { await store.send(.openProjectButtonTapped(project)) }
-                                    dismiss()
-                                },
-                                openWithPicked: { bundleIdentifier in
-                                    Task { await store.send(.openWithAppPicked(project, bundleIdentifier)) }
-                                    dismiss()
-                                },
-                                removeButtonTapped: {
-                                    await store.send(.removeProjectButtonTapped(project.id))
-                                },
-                                removeConfirmed: {
-                                    await store.send(.removingProjectConfirmed)
-                                },
-                                removeCancelled: {
-                                    await store.send(.removingProjectCancelled)
-                                }
-                            )
+                    GlassEffectContainer(spacing: 8) {
+                        LazyVStack(spacing: 8) {
+                            ForEach(store.projects) { project in
+                                ProjectRowView(
+                                    project: project,
+                                    currentIcon: currentIcon(for: project),
+                                    openWithOptions: openWithOptions(for: project),
+                                    isConfirmingRemoval: pendingRemovalProject?.id == project.id,
+                                    openProject: {
+                                        Task { await store.send(.openProjectButtonTapped(project)) }
+                                        dismiss()
+                                    },
+                                    openWithPicked: { bundleIdentifier in
+                                        Task { await store.send(.openWithAppPicked(project, bundleIdentifier)) }
+                                        dismiss()
+                                    },
+                                    removeButtonTapped: {
+                                        await store.send(.removeProjectButtonTapped(project.id))
+                                    },
+                                    removeConfirmed: {
+                                        await store.send(.removingProjectConfirmed)
+                                    },
+                                    removeCancelled: {
+                                        await store.send(.removingProjectCancelled)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -133,6 +135,7 @@ struct ProjectsDashboardView: View {
                         Image(systemName: "plus")
                     }
                 }
+                .buttonStyle(.glass)
             }
         }
         .task {

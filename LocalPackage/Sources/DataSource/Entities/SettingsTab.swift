@@ -20,6 +20,7 @@
 
 public enum SettingsTab {
     case general
+    case translation
     case runner
     case metrics
     case donation

@@ -71,9 +71,13 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             logService.critical(.setupFailed(error))
         }
+        if UserDefaults.standard.bool(forKey: "translation.enabled") {
+            TranslationService.shared.start()
+        }
     }
 
     public func applicationWillTerminate(_ notification: Notification) {
+        TranslationService.shared.stop()
         CustomMetricsService(appDependencies).stopMonitoring()
         SystemMetricsService(appDependencies).stopMonitoring()
     }

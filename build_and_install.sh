@@ -23,6 +23,9 @@ DERIVED_DATA="$(cd "$(dirname "$0")" && pwd)/DerivedData"
 APP_BUNDLE_PATH="$DERIVED_DATA/Build/Products/$CONFIGURATION/$APP_NAME.app"
 INSTALL_PATH="/Applications/$APP_NAME.app"
 
+# Keep Xcode build products out of Spotlight application search results.
+touch "$DERIVED_DATA/.metadata_never_index"
+
 # Xcode 选择: 优先使用已安装的 Xcode, 否则回退到命令行工具
 if [ -d "/Applications/Xcode.app" ]; then
     export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
@@ -61,6 +64,9 @@ sleep 1
 echo "==> [3/4] 替换 $INSTALL_PATH ..."
 rm -rf "$INSTALL_PATH"
 ditto "$APP_BUNDLE_PATH" "$INSTALL_PATH"
+
+# Do not leave the build product registered as a second application by Spotlight.
+rm -rf "$APP_BUNDLE_PATH" "$DERIVED_DATA/Build/Products/$CONFIGURATION/$APP_NAME.app.dSYM"
 
 if [ "$RELAUNCH" -eq 1 ]; then
     echo "==> [4/4] 启动 $APP_NAME ..."
