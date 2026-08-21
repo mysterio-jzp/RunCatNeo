@@ -71,7 +71,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             logService.critical(.setupFailed(error))
         }
-        if UserDefaults.standard.bool(forKey: "translation.enabled") {
+        if UserDefaults.standard.object(forKey: "translation.enabled") as? Bool ?? true {
             TranslationService.shared.start()
         }
     }

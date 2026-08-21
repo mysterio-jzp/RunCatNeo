@@ -23,11 +23,21 @@ struct TranslationSettingsView: View {
                     ForEach(store.models, id: \.self) { Text($0).tag($0) }
                 }
                 Picker("目标语言", selection: $store.targetLanguage) {
+                    Text("自动选择").tag("自动选择")
                     Text("中文").tag("中文")
                     Text("English").tag("English")
                 }
             } header: {
                 Text("翻译服务")
+            }
+            Section {
+                SecureField("App Key", text: $store.youdaoAppKey)
+                SecureField("App Secret", text: $store.youdaoAppSecret)
+                Text("可选。配置后会在阿里云结果下显示有道翻译结果。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text("有道翻译")
             }
         }
         .formStyle(.grouped)
