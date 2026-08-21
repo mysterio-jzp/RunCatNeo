@@ -24,6 +24,7 @@ import SwiftUI
 
 struct MenuView: View {
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismiss) private var dismiss
     var store: Dashboard
 
     private var aboutBody: AttributedString {
@@ -72,10 +73,12 @@ struct MenuView: View {
                 }
             }
             .buttonStyle(.preAction {
+                dismiss()
                 await store.send(.settingsButtonTapped)
             })
             Button {
                 Task {
+                    dismiss()
                     await store.send(.activityMonitorButtonTapped)
                 }
             } label: {
